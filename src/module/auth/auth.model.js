@@ -25,11 +25,6 @@ const userSchema = new mongoose.Schema(
       select: false,
       //We know ;)
     },
-    role: {
-      type: String,
-      enum: ["customer", "seller", "admin"],
-      default: "customer",
-    },
     isVerified: {
       type: Boolean,
       default: false,
@@ -43,10 +38,9 @@ const userSchema = new mongoose.Schema(
 );
 
 //This is a mongoose middleware that runs before saving a user document. It checks if the password field has been modified. If it has, it hashes the password using bcrypt with a salt round of 12 and then proceeds to save the document.
-userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
+userSchema.pre("save", async function () {
+  if (!this.isModified("password")) return;
   this.password = await bcrypt.hash(this.password, 12);
-  next();
 });
 
 userSchema.methods.comparePassword = async function (clearTextPassword) {
