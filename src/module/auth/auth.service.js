@@ -106,4 +106,8 @@ const refresh = async (token) => {
   return { accessToken };
 };
 
-export { register, verifyEmail, login, refresh };
+const logout = async (userId) => {
+  await User.findByIdAndUpdate(userId, { refreshToken: null });
+};
+
+export { register, verifyEmail, login, refresh, logout };
