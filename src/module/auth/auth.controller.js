@@ -19,4 +19,13 @@ const verifyEmail = async (req, res, next) => {
   }
 };
 
-export { register, verifyEmail };
+const login = async (req, res, next) => {
+  try {
+    const user = await authService.login(req.body);
+    ApiResponse.ok(res, "Login success", user);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export { register, verifyEmail, login };

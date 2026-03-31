@@ -6,6 +6,9 @@ import { generateResetToken, generateAccessToken, generateRefreshToken, verifyAc
 
 import User from "./auth.model.js";
 
+const hashToken = (token) =>
+  crypto.createHash("sha256").update(token).digest("hex");
+
 const register = async ({ name, email, password }) => {
   const existing = await User.findOne({ email });
   if (existing) throw ApiError.conflict("Email already exisits");
@@ -59,4 +62,29 @@ const verifyEmail = async (token) => {
   return user;
 };
 
-export { register, verifyEmail };
+const login = async ({ email, password }) => {
+  const user = await User.findOne({ email }).select("+password");
+  if (!user) throw ApiError.unauthorized("Invalid email or password");
+
+  const isMatch = await user.comparePassword(password);
+  if (!isMatch) throw ApiError.unauthorized("Invalid email or password");
+
+  if (!user.isVerified) {
+    throw ApiError.forbidden("Please verify your email before logging in");
+  }
+
+  const accessToken = generateAccessToken({ id: user._id });
+  const refreshToken = generateRefreshToken({ id: user._id });
+
+  // Store hashed refresh token in DB so it can be invalidated on logout
+  user.refreshToken = hashToken(refreshToken);
+  await user.save({ validateBeforeSave: false });
+
+  const userObj = user.toObject();
+  delete userObj.password;
+  delete userObj.refreshToken;
+
+  return { user: userObj, accessToken, refreshToken };
+};
+
+export { register, verifyEmail, login };
