@@ -84,6 +84,8 @@ const login = async ({ email, password }) => {
   delete userObj.password;
   delete userObj.refreshToken;
 
+  console.log(accessToken)
+  console.log("***+++++++***")
   console.log(refreshToken)
 
   return { user: userObj, accessToken, refreshToken };
@@ -110,4 +112,10 @@ const logout = async (userId) => {
   await User.findByIdAndUpdate(userId, { refreshToken: null });
 };
 
-export { register, verifyEmail, login, refresh, logout };
+const getMe = async (userId) => {
+  const user = await User.findById(userId);
+  if (!user) throw ApiError.notfound("User not found");
+  return user;
+}
+
+export { register, verifyEmail, login, refresh, logout, getMe };
