@@ -5,6 +5,7 @@ const app = express();
 
 // middleware to parse JSON
 app.use(express.json());
+app.use(cookieParser());
 
 // mount routes
 app.use("/api/auth", authRouter);

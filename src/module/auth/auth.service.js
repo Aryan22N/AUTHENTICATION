@@ -84,7 +84,26 @@ const login = async ({ email, password }) => {
   delete userObj.password;
   delete userObj.refreshToken;
 
+  console.log(refreshToken)
+
   return { user: userObj, accessToken, refreshToken };
 };
 
-export { register, verifyEmail, login };
+const refresh = async (token) => {
+  if (!token) throw ApiError.unauthorized("Refresh token missing");
+
+  const decoded = verifyRefreshToken(token);
+
+  const user = await User.findById(decoded.id).select("+refreshToken");
+  if (!user) throw ApiError.unauthorized("User no longer exists");
+
+  if (user.refreshToken !== hashToken(token)) {
+    throw ApiError.unauthorized("Invalid refresh token — please log in again");
+  }
+
+  const accessToken = generateAccessToken({ id: user._id });
+
+  return { accessToken };
+};
+
+export { register, verifyEmail, login, refresh };

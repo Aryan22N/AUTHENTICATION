@@ -19,13 +19,23 @@ const verifyEmail = async (req, res, next) => {
   }
 };
 
-const login = async (req, res, next) => {
-  try {
-    const user = await authService.login(req.body);
-    ApiResponse.ok(res, "Login success", user);
-  } catch (err) {
-    next(err);
-  }
+const login = async (req, res) => {
+  const { user, accessToken, refreshToken } = await authService.login(req.body);
+
+  res.cookie("refreshToken", refreshToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+  });
+
+  ApiResponse.ok(res, "Login successful", { user, accessToken });
 };
 
-export { register, verifyEmail, login };
+const refreshToken = async (req, res) => {
+  const token = req.cookies?.refreshToken;
+  const { accessToken } = await authService.refresh(token);
+  ApiResponse.ok(res, "Token refreshed", { accessToken });
+};
+
+export { register, verifyEmail, login, refreshToken };
