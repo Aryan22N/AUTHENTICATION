@@ -49,4 +49,10 @@ const getMe = async (req, res) => {
   const user = await authService.getMe(req.user.id);
   ApiResponse.ok(res, "User profile", user);
 }
-export { register, verifyEmail, login, refreshToken, logout, getMe };
+
+const forgotPassword = async (req, res) => {
+  await authService.forgotPassword(req.body.email);
+  ApiResponse.ok(res, "Password reset email sent successfully");
+};
+
+export { register, verifyEmail, login, refreshToken, logout, getMe, forgotPassword };

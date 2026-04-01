@@ -1,6 +1,6 @@
 import ApiError from "../../common/utils/api-error.js";
 import crypto from "crypto";
-import { sendVerificationEmail } from "../../common/config/email.js";
+import { sendVerificationEmail, sendResetPasswordEmail } from "../../common/config/email.js";
 
 import { generateResetToken, generateAccessToken, generateRefreshToken, verifyAccessToken, verifyRefreshToken } from "../../common/utils/jwt.utils.js";
 
@@ -118,4 +118,21 @@ const getMe = async (userId) => {
   return user;
 }
 
-export { register, verifyEmail, login, refresh, logout, getMe };
+const forgotPassword = async (email) => {
+  const user = await User.findOne({ email });
+  if (!user) throw ApiError.notFound("No account with that email");
+
+  const { rawToken, hashedToken } = generateResetToken();
+
+  user.resetPasswordToken = hashedToken;
+  user.resetPasswordExpires = Date.now() + 15 * 60 * 1000;
+  await user.save();
+
+  try {
+    await sendResetPasswordEmail(email, rawToken);
+  } catch (err) {
+    console.error("Failed to send reset email:", err.message);
+  }
+};
+
+export { register, verifyEmail, login, refresh, logout, getMe, forgotPassword };
